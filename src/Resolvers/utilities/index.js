@@ -28,6 +28,8 @@ module.exports = function utilities () {
       const userToCreate = new User({ username, email, password: hash })
 
       const userCreated = await userToCreate.save()
+
+      userCreated.jwt = jwt.sign({ _id: userCreated._id }, JWT_SECRET)
       return userCreated
     } catch (e) {
         _handleError(`There was an error../ creating user: ==> ${e}`)
@@ -50,9 +52,43 @@ module.exports = function utilities () {
     }
   }
 
+  async function context (headers) {
+    const user = await getUser(headers.req.headers.authorization)
+    return {
+      headers,
+      user
+    }
+  }
+
+  async function getUser (authorization) {
+    const bearerLength = "Bearer ".length
+
+    if (authorization && authorization.length > bearerLength) {
+      const token = authorization.slice(bearerLength)
+
+      const { ok, result } = await new Promise(resolve =>
+        jwt.verify(token, JWT_SECRET, (err, result) => {
+          if (err) resolve({ ok: false, result: err })
+          resolve({ ok: true, result })
+        })
+      )
+
+      if (ok) {
+        const user = await User.findOne({ _id: result._id })
+        return user
+      } else {
+        console.error(result)
+        return null
+      }
+    }
+
+    return null
+  }
+
 
   return {
     signup,
-    login
+    login,
+    context
   }
 }

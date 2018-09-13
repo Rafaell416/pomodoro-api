@@ -8,8 +8,10 @@ const PORT = process.env.PORT || 3000
 const config = require('./config')
 const { DB_URL } = config
 const db = require('./src/db')(DB_URL)
+const utilities = require('./src/Resolvers/utilities')()
+const context = utilities.context
 
-const server = new ApolloServer({ schema })
+const server = new ApolloServer({ schema, context })
 
 server.applyMiddleware({ app })
 
