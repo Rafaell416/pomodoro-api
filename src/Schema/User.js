@@ -1,6 +1,6 @@
 const User = `
   type User {
-    id: ID!
+    _id: ID!
     username: String!
     email: String!
   }
@@ -8,6 +8,7 @@ const User = `
   input newUser {
     username: String!
     email: String!
+    password: String!
   }
 `
 
