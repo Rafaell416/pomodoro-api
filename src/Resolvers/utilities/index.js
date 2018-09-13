@@ -1,5 +1,6 @@
 'use strict'
 const User = require('../../db/Models/User')
+const Timer = require('../../db/Models/Timer')
 const bcrypt = require('bcrypt')
 const config = require('../../../config')
 const { JWT_SECRET } = config
@@ -81,14 +82,23 @@ module.exports = function utilities () {
         return null
       }
     }
-
     return null
+  }
+
+  async function createTimer (timer) {
+    try {
+      const { uid } = timer
+      return await Timer.findOneAndUpdate({ uid }, timer, { upsert: true }) || timer;
+    } catch (e) {
+      _handleError(`There was an error creating the timer: ==> ${e}`)
+    }
   }
 
 
   return {
     signup,
     login,
-    context
+    context,
+    createTimer
   }
 }

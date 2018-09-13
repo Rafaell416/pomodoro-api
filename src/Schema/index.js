@@ -8,13 +8,18 @@ const resolvers = require('../Resolvers')
 
 const rootQuery =`
   type Query {
-    user (username: String!) : User
+    user : User
     timer (uid: String!) : Timer
   }
 
   type Mutation {
     signup (user: newUser) : User
     login (username: String!, password: String!) : User
+    timerCreate (timer: newTimer) : Timer
+    timerPlay (uid: String!) : Timer
+    timerPause (uid: String!) : Timer
+    timerChangeType (uid: String!) : Timer
+    timerReset (uid: String!) : Timer
   }
 `
 

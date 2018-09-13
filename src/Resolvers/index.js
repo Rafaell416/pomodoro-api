@@ -8,7 +8,8 @@ const resolvers = {
   },
   Mutation: {
     login: (_, args, context) => utilities.login(args.username, args.password),
-    signup: (_, args) => utilities.signup(args.user)
+    signup: (_, args) => utilities.signup(args.user),
+    timerCreate: (_, args) => utilities.createTimer(args.timer)
   }
 }
 

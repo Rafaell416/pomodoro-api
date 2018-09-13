@@ -5,6 +5,7 @@ const Schema = Mongoose.Schema
 
 
 const Timer = new Schema({
+  uid: {type: String, required: true},
   minutes: {type: Number, required: true},
   seconds: {type: Number, required: true},
   active: {type: Boolean, required: true},
