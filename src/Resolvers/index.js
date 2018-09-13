@@ -9,7 +9,9 @@ const resolvers = {
   Mutation: {
     login: (_, args, context) => utilities.login(args.username, args.password),
     signup: (_, args) => utilities.signup(args.user),
-    timerCreate: (_, args) => utilities.createTimer(args.timer)
+    timerCreate: (_, args) => utilities.createTimer(args.timer),
+    timerPlay: (_, args) => utilities.playTimer(args.uid),
+    timerPause: (_, args) => utilities.pauseTimer(args.uid)
   }
 }
 

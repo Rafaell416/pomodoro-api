@@ -94,11 +94,37 @@ module.exports = function utilities () {
     }
   }
 
+  async function getTimerByUid (uid) {
+    const timer = await Timer.findOne({ uid })
+    return timer
+  }
+
+  async function playTimer (uid) {
+    try {
+      await Timer.findOneAndUpdate({ uid }, {active: true}, {upsert: true})
+      const timerUpdated = await getTimerByUid(uid)
+      return timerUpdated
+    } catch (e) {
+      _handleError(`There was an error updating active the timer: ==> ${e}`)
+    }
+  }
+
+  async function pauseTimer (uid) {
+    try {
+      await Timer.findOneAndUpdate({ uid }, {active: false}, {upsert: true})
+      const timerUpdated = await getTimerByUid(uid)
+      return timerUpdated
+    } catch (e) {
+      _handleError(`There was an error updating inactive the timer: ==> ${e}`)
+    }
+  }
 
   return {
     signup,
     login,
     context,
-    createTimer
+    createTimer,
+    playTimer,
+    pauseTimer
   }
 }
