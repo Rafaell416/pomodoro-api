@@ -3,7 +3,7 @@ const User = require('../../db/Models/User')
 const Timer = require('../../db/Models/Timer')
 const bcrypt = require('bcrypt')
 const config = require('../../../config')
-const { JWT_SECRET } = config
+const JWT_SECRET = process.env.JWT_SECRET || config.JWT_SECRET
 const jwt = require('jsonwebtoken')
 
 
