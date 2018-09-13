@@ -18,7 +18,7 @@ const rootQuery =`
     timerCreate (timer: newTimer) : Timer
     timerPlay (uid: String!) : Timer
     timerPause (uid: String!) : Timer
-    timerChangeType (uid: String!) : Timer
+    timerChangeType (uid: String!, type: String!) : Timer
     timerReset (uid: String!) : Timer
   }
 `

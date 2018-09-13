@@ -9,7 +9,6 @@ const jwt = require('jsonwebtoken')
 
 module.exports = function utilities () {
 
-
   function _handleError (error) {
     throw new Error(error)
   }
@@ -119,12 +118,40 @@ module.exports = function utilities () {
     }
   }
 
+  async function changeTimerType (uid, type) {
+    try {
+      await Timer.findOneAndUpdate({ uid }, { type }, {upsert: true})
+      const timerUpdated = await getTimerByUid(uid)
+      return timerUpdated
+    } catch (e) {
+        _handleError(`There was an error changing timer type: ==> ${e}`)
+    }
+  }
+
+  async function resetTimer (uid) {
+    try {
+      await Timer.findOneAndUpdate({ uid }, {
+        minutes: 0,
+        seconds: 0,
+        active: false,
+        duration: 25,
+        type: "work"
+      }, {upsert: true})
+      const timerUpdated = await getTimerByUid(uid)
+      return timerUpdated
+    } catch (e) {
+      _handleError(`There was an error reseting timer: ==> ${e}`)
+    }
+  }
+
   return {
     signup,
     login,
     context,
     createTimer,
     playTimer,
-    pauseTimer
+    pauseTimer,
+    changeTimerType,
+    resetTimer,
   }
 }
