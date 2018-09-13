@@ -1,3 +1,5 @@
+'use strict'
+
 const { makeExecutableSchema } = require('graphql-tools')
 const { ApolloServer } = require('apollo-server-express')
 
