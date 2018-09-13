@@ -15,9 +15,9 @@ module.exports = function utilities () {
       const existingUser = await User.findOne({ username })
       const existingEmail = await User.findOne({ email })
 
-      if (existingUser) return _handleError('This username already exist', 'error')
+      if (existingUser) return _handleError('This username already exist')
 
-      if (existingEmail) return _handleError('This email is already taken', 'error')
+      if (existingEmail) return _handleError('This email is already taken')
 
       const hash = await bcrypt.hash(password, 10)
 
@@ -30,8 +30,23 @@ module.exports = function utilities () {
     }
   }
 
+  async function login (username, password) {
+    try {
+      const user = await User.findOne({ username })
+      if (!user) _handleError('username not found')
+
+      const validPassword = await bcrypt.compare(password, user.password)
+      if (!validPassword) _handleError('Passowrd incorrect')
+
+      return user
+    } catch (e) {
+        _handleError(`There was an error getting user: ==> ${e}`)
+    }
+  }
+
 
   return {
-    signup
+    signup,
+    login
   }
 }

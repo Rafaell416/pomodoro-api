@@ -14,7 +14,7 @@ const rootQuery =`
 
   type Mutation {
     signup (user: newUser) : User
-    login (username: String!, email: String!, password: String!) : User
+    login (username: String!, password: String!) : User
   }
 `
 

@@ -13,7 +13,7 @@ const resolvers = {
     }
   },
   Mutation: {
-    login: (_, args) => {username: 'Rafaell416'},
+    login: (_, args) => utilities.login(args.username, args.password),
     signup: (_, args) => utilities.signup(args.user)
   }
 }
