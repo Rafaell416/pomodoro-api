@@ -1,6 +1,10 @@
 'use strict'
 const User = require('../../db/Models/User')
 const bcrypt = require('bcrypt')
+const config = require('../../../config')
+const { JWT_SECRET } = config
+const jwt = require('jsonwebtoken')
+
 
 module.exports = function utilities () {
 
@@ -26,7 +30,7 @@ module.exports = function utilities () {
       const userCreated = await userToCreate.save()
       return userCreated
     } catch (e) {
-        _handleError(`There was an error creating user: ==> ${e}`)
+        _handleError(`There was an error../ creating user: ==> ${e}`)
     }
   }
 
@@ -37,6 +41,8 @@ module.exports = function utilities () {
 
       const validPassword = await bcrypt.compare(password, user.password)
       if (!validPassword) _handleError('Passowrd incorrect')
+
+      user.jwt = jwt.sign({ _id: user._id }, JWT_SECRET)
 
       return user
     } catch (e) {

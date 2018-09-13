@@ -2,7 +2,8 @@ const User = `
   type User {
     _id: ID!
     username: String!
-    email: String!
+    email: String
+    jwt: String
   }
 
   input newUser {
