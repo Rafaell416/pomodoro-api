@@ -21,6 +21,10 @@ const rootQuery =`
     timerReset (uid: String!) : Timer
     timerGet (uid: String!) : Timer
   }
+
+  type Subscription {
+    activeTimer : Timer!
+  }
 `
 
 const schema = makeExecutableSchema({
