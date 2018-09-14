@@ -27,7 +27,7 @@ module.exports = function utilities () {
       const userToCreate = new User({ username, email, password: hash })
       const userCreated = await userToCreate.save()
 
-      await createTimer({ uid: userCreated._id, minutes:0, seconds:0, active:false, duration:25 })
+      await createTimer({ uid: userCreated._id, minutes:0, seconds:0, active:false, duration:25, type: 'work' })
 
       userCreated.jwt = jwt.sign({ _id: userCreated._id }, JWT_SECRET)
       return userCreated
@@ -152,5 +152,6 @@ module.exports = function utilities () {
     pauseTimer,
     changeTimerType,
     resetTimer,
+    getTimerByUid
   }
 }

@@ -11,7 +11,14 @@ const db = require('./src/db')(DB_URL)
 const utilities = require('./src/Resolvers/utilities')()
 const context = utilities.context
 
-const server = new ApolloServer({ schema, context })
+const server = new ApolloServer({
+  schema,
+  context,
+  formatError: error => {
+    console.log(error)
+    return new Error('Internal server error')
+  },
+})
 
 server.applyMiddleware({ app })
 

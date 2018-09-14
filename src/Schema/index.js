@@ -19,6 +19,7 @@ const rootQuery =`
     timerPause (uid: String!) : Timer
     timerChangeType (uid: String!, type: String!) : Timer
     timerReset (uid: String!) : Timer
+    timerGet (uid: String!) : Timer
   }
 `
 
