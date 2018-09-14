@@ -15,7 +15,6 @@ const rootQuery =`
   type Mutation {
     signup (user: newUser) : User
     login (username: String!, password: String!) : User
-    timerCreate (timer: newTimer) : Timer
     timerPlay (uid: String!) : Timer
     timerPause (uid: String!) : Timer
     timerChangeType (uid: String!, type: String!) : Timer

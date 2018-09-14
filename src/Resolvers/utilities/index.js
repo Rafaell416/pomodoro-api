@@ -24,10 +24,10 @@ module.exports = function utilities () {
       if (existingEmail) return _handleError('This email is already taken')
 
       const hash = await bcrypt.hash(password, 10)
-
       const userToCreate = new User({ username, email, password: hash })
-
       const userCreated = await userToCreate.save()
+
+      await createTimer({ uid: userCreated._id, minutes:0, seconds:0, active:false, duration:25 })
 
       userCreated.jwt = jwt.sign({ _id: userCreated._id }, JWT_SECRET)
       return userCreated
@@ -148,7 +148,6 @@ module.exports = function utilities () {
     signup,
     login,
     context,
-    createTimer,
     playTimer,
     pauseTimer,
     changeTimerType,
