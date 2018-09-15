@@ -1,6 +1,15 @@
 const Timer = `
   type Timer {
-    id: ID!
+    uid: ID!
+    minutes: Float!
+    seconds: Float!
+    active: Boolean!
+    duration: Float!
+    type: String!
+  }
+
+  input newTimer {
+    uid: ID!
     minutes: Float!
     seconds: Float!
     active: Boolean!
