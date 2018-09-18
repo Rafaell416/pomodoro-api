@@ -52,12 +52,18 @@ module.exports = function utilities () {
     }
   }
 
-  async function context (headers) {
-    const user = await getUser(headers.req.headers.authorization)
-    return {
-      headers,
-      user
-    }
+  async function context ({req, connection}) {
+    // console.log('connection: ',connection)
+    // if (connection) {
+    //   const user = await getUser(req.headers.authorization)
+    //   return {
+    //     token,
+    //     user
+    //   }
+    // } else {
+    //   const token = req.headers.authorization || ""
+    //   return { token }
+    // }
   }
 
   async function getUser (authorization) {
@@ -94,8 +100,21 @@ module.exports = function utilities () {
   }
 
   async function getTimerByUid (uid) {
-    const timer = await Timer.findOne({ uid })
-    return timer
+    try {
+      const timer = await Timer.findOne({ uid })
+      return timer
+    } catch (e) {
+        _handleError(`There was an error gettin timer by uid: ==> ${e} `)
+    }
+  }
+
+  async function getUserByUid (uid) {
+    try {
+      const user = await User.findOne({ _id: uid })
+      return user
+    } catch (e) {
+        _handleError(`There was an error getting user by uid: ==> ${e} `)
+    }
   }
 
   async function playTimer (uid) {
@@ -118,9 +137,43 @@ module.exports = function utilities () {
     }
   }
 
+  function getTypeData (type) {
+    switch (type) {
+      case 'work':
+        return {
+          type: 'work',
+          active: true,
+          minutes: 0,
+          seconds: 0,
+          duration: 25,
+        }
+        break;
+      case 'short_break':
+        return {
+          type: 'short_break',
+          active: true,
+          minutes: 0,
+          seconds: 0,
+          duration: 5
+        }
+      case 'long_break':
+        return {
+          type: 'long_break',
+          active: true,
+          minutes: 0,
+          seconds: 0,
+          duration: 15
+        }
+      default:
+        return type
+    }
+  }
+
   async function changeTimerType (uid, type) {
     try {
-      await Timer.findOneAndUpdate({ uid }, { type }, {upsert: true})
+      const data = getTypeData(type)
+      const { duration, minutes, seconds, active } = data
+      await Timer.findOneAndUpdate({ uid }, { type, duration, minutes, seconds, active }, {upsert: true})
       const timerUpdated = await getTimerByUid(uid)
       return timerUpdated
     } catch (e) {
@@ -144,6 +197,19 @@ module.exports = function utilities () {
     }
   }
 
+  async function updateCounter (uid, minutes, seconds) {
+    try {
+      await Timer.findOneAndUpdate({ uid }, {
+        minutes,
+        seconds
+      }, { upsert: true })
+      const counterUpdated = await getTimerByUid(uid)
+      return counterUpdated
+    } catch (e) {
+      _handleError(`There was an error updating counter: ==> ${e}`)
+    }
+  }
+
   return {
     signup,
     login,
@@ -152,6 +218,8 @@ module.exports = function utilities () {
     pauseTimer,
     changeTimerType,
     resetTimer,
-    getTimerByUid
+    getTimerByUid,
+    getUserByUid,
+    updateCounter
   }
 }
