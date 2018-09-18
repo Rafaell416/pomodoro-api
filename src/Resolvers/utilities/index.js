@@ -53,17 +53,13 @@ module.exports = function utilities () {
   }
 
   async function context ({req, connection}) {
-    // console.log('connection: ',connection)
-    // if (connection) {
-    //   const user = await getUser(req.headers.authorization)
-    //   return {
-    //     token,
-    //     user
-    //   }
-    // } else {
-    //   const token = req.headers.authorization || ""
-    //   return { token }
-    // }
+    if (connection) {
+       return {}
+     } else {
+       const token = req.headers.authorization || ""
+       const user = await getUser(token)
+       return { token, user }
+     }
   }
 
   async function getUser (authorization) {
