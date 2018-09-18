@@ -35,7 +35,13 @@ const resolvers = {
       return timerUpdated
     },
     timerChangeType: (_, args) => utilities.changeTimerType(args.uid, args.type),
-    timerReset: (_, args) => utilities.resetTimer(args.uid),
+    timerReset: async (_, args) => {
+      const timerReseted = await utilities.resetTimer(args.uid)
+      utilities.handleStartCounter(timerReseted.uid)
+      pubsub.publish(TIMER_STATUS_CHANGED, { timerStatusChanged: timerReseted })
+      pubsub.publish(TIMER_COUNTER_UPDATED, { timerCounterUpdated: timerReseted })
+      return timerReseted
+    },
     timerGet: (_, args) => utilities.getTimerByUid(args.uid),
   }
 }
