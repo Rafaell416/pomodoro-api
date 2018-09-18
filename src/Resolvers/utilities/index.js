@@ -6,6 +6,8 @@ const config = require('../../../config')
 const JWT_SECRET = process.env.JWT_SECRET || config.JWT_SECRET
 const jwt = require('jsonwebtoken')
 
+const pubsub = require('./pubsub')()
+const TIMER_COUNTER_UPDATED = 'TIMER_COUNTER_UPDATED'
 
 module.exports = function utilities () {
 
@@ -193,16 +195,70 @@ module.exports = function utilities () {
     }
   }
 
-  async function updateCounter (uid, minutes, seconds) {
+  async function updateCounter (uid, duration, minutes, seconds) {
     try {
       await Timer.findOneAndUpdate({ uid }, {
         minutes,
-        seconds
+        seconds,
+        duration
       }, { upsert: true })
       const counterUpdated = await getTimerByUid(uid)
       return counterUpdated
     } catch (e) {
       _handleError(`There was an error updating counter: ==> ${e}`)
+    }
+  }
+
+
+  let interval
+
+  function startCountDown (timer) {
+    const { duration } = timer
+    const durationInSeconds = duration * 60
+
+    calculateTime(durationInSeconds, timer)
+  }
+
+  function stopCountDown () {
+    clearInterval(interval)
+  }
+
+  async function calculateTime (duration, counter) {
+    try {
+      let timer = duration, minutes, seconds
+      interval = setInterval( async () => {
+        minutes = parseInt(timer / 60, 10)
+        seconds = parseInt(timer % 60, 10)
+
+        minutes = minutes < 10 ? "0" + minutes : minutes
+        seconds = seconds < 10 ? "0" + seconds : seconds
+
+        console.log(minutes, seconds)
+        const counterUpdated = await updateCounter(counter.uid, minutes, minutes, seconds)
+        pubsub.publish(TIMER_COUNTER_UPDATED, { timerCounterUpdated: counterUpdated })
+
+        if (--timer < 0) {
+          timer = duration
+        }
+      }, 1000)
+    } catch (e) {
+      _handleError(`There was an error at calculateTime: ==> ${e}`)
+    }
+  }
+
+  async function handleStartCounter (uid) {
+    try {
+      const Counter = await Timer.findOne({ uid })
+      const timerStatus = Counter.active
+
+      if (timerStatus) {
+        startCountDown(Counter)
+      } else {
+        stopCountDown()
+      }
+
+    } catch (e) {
+        _handleError(`There was an error hading start counter: ==> ${e}`)
     }
   }
 
@@ -216,6 +272,6 @@ module.exports = function utilities () {
     resetTimer,
     getTimerByUid,
     getUserByUid,
-    updateCounter
+    handleStartCounter
   }
 }

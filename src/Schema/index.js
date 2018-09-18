@@ -19,11 +19,11 @@ const rootQuery =`
     timerChangeType (uid: String!, type: String!) : Timer
     timerReset (uid: String!) : Timer
     timerGet (uid: String!) : Timer
-    timerUpdateCounter (uid: String!, minutes: Float!, seconds: Float!) : Timer
   }
 
   type Subscription {
     timerStatusChanged : Timer
+    timerCounterUpdated : Timer
   }
 `
 
