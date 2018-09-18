@@ -29,7 +29,7 @@ module.exports = function utilities () {
       const userToCreate = new User({ username, email, password: hash })
       const userCreated = await userToCreate.save()
 
-      await createTimer({ uid: userCreated._id, minutes:0, seconds:0, active:false, duration:25, type: 'work' })
+      await createTimer({ uid: userCreated._id, minutes:0, seconds:0, active:false, duration:25, lastDuration: 0, type: 'work' })
 
       userCreated.jwt = jwt.sign({ _id: userCreated._id }, JWT_SECRET)
       return userCreated
@@ -186,7 +186,8 @@ module.exports = function utilities () {
         seconds: 0,
         active: false,
         duration: 25,
-        type: "work"
+        type: "work",
+        lastDuration:0
       }, {upsert: true})
       const timerUpdated = await getTimerByUid(uid)
       return timerUpdated
@@ -195,12 +196,12 @@ module.exports = function utilities () {
     }
   }
 
-  async function updateCounter (uid, duration, minutes, seconds) {
+  async function updateCounter (uid, minutes, seconds, lastDuration) {
     try {
       await Timer.findOneAndUpdate({ uid }, {
         minutes,
         seconds,
-        duration
+        lastDuration
       }, { upsert: true })
       const counterUpdated = await getTimerByUid(uid)
       return counterUpdated
@@ -225,7 +226,10 @@ module.exports = function utilities () {
 
   async function calculateTime (duration, counter) {
     try {
-      let timer = duration, minutes, seconds
+      const lastDuration = counter.lastDuration
+      let timer = lastDuration > 0 ? lastDuration : duration 
+      let minutes
+      let seconds
       interval = setInterval( async () => {
         minutes = parseInt(timer / 60, 10)
         seconds = parseInt(timer % 60, 10)
@@ -234,7 +238,8 @@ module.exports = function utilities () {
         seconds = seconds < 10 ? "0" + seconds : seconds
 
         console.log(minutes, seconds)
-        const counterUpdated = await updateCounter(counter.uid, minutes, minutes, seconds)
+        const lastDurationInSeconds = timer
+        const counterUpdated = await updateCounter(counter.uid, minutes, seconds, lastDurationInSeconds)
         pubsub.publish(TIMER_COUNTER_UPDATED, { timerCounterUpdated: counterUpdated })
 
         if (--timer < 0) {
