@@ -144,6 +144,7 @@ module.exports = function utilities () {
           minutes: 0,
           seconds: 0,
           duration: 25,
+          lastDuration: 0
         }
         break;
       case 'short_break':
@@ -152,7 +153,8 @@ module.exports = function utilities () {
           active: true,
           minutes: 0,
           seconds: 0,
-          duration: 5
+          duration: 5,
+          lastDuration: 0
         }
       case 'long_break':
         return {
@@ -160,7 +162,8 @@ module.exports = function utilities () {
           active: true,
           minutes: 0,
           seconds: 0,
-          duration: 15
+          duration: 15,
+          lastDuration: 0
         }
       default:
         return type
@@ -170,8 +173,8 @@ module.exports = function utilities () {
   async function changeTimerType (uid, type) {
     try {
       const data = getTypeData(type)
-      const { duration, minutes, seconds, active } = data
-      await Timer.findOneAndUpdate({ uid }, { type, duration, minutes, seconds, active }, {upsert: true})
+      const { duration, minutes, seconds, active, lastDuration } = data
+      await Timer.findOneAndUpdate({ uid }, { type, duration, minutes, seconds, active, lastDuration }, {upsert: true})
       const timerUpdated = await getTimerByUid(uid)
       return timerUpdated
     } catch (e) {
@@ -227,7 +230,7 @@ module.exports = function utilities () {
   async function calculateTime (duration, counter) {
     try {
       const lastDuration = counter.lastDuration
-      let timer = lastDuration > 0 ? lastDuration : duration 
+      let timer = lastDuration > 0 ? lastDuration : duration
       let minutes
       let seconds
       interval = setInterval( async () => {
