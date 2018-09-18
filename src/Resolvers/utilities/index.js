@@ -6,6 +6,8 @@ const config = require('../../../config')
 const JWT_SECRET = process.env.JWT_SECRET || config.JWT_SECRET
 const jwt = require('jsonwebtoken')
 
+const pubsub = require('./pubsub')()
+const TIMER_COUNTER_UPDATED = 'TIMER_COUNTER_UPDATED'
 
 module.exports = function utilities () {
 
@@ -27,7 +29,7 @@ module.exports = function utilities () {
       const userToCreate = new User({ username, email, password: hash })
       const userCreated = await userToCreate.save()
 
-      await createTimer({ uid: userCreated._id, minutes:0, seconds:0, active:false, duration:25, type: 'work' })
+      await createTimer({ uid: userCreated._id, minutes:0, seconds:0, active:false, duration:25, lastDuration: 0, type: 'work' })
 
       userCreated.jwt = jwt.sign({ _id: userCreated._id }, JWT_SECRET)
       return userCreated
@@ -52,12 +54,14 @@ module.exports = function utilities () {
     }
   }
 
-  async function context (headers) {
-    const user = await getUser(headers.req.headers.authorization)
-    return {
-      headers,
-      user
-    }
+  async function context ({req, connection}) {
+    if (connection) {
+       return {}
+     } else {
+       const token = req.headers.authorization || ""
+       const user = await getUser(token)
+       return { token, user }
+     }
   }
 
   async function getUser (authorization) {
@@ -94,8 +98,21 @@ module.exports = function utilities () {
   }
 
   async function getTimerByUid (uid) {
-    const timer = await Timer.findOne({ uid })
-    return timer
+    try {
+      const timer = await Timer.findOne({ uid })
+      return timer
+    } catch (e) {
+        _handleError(`There was an error gettin timer by uid: ==> ${e} `)
+    }
+  }
+
+  async function getUserByUid (uid) {
+    try {
+      const user = await User.findOne({ _id: uid })
+      return user
+    } catch (e) {
+        _handleError(`There was an error getting user by uid: ==> ${e} `)
+    }
   }
 
   async function playTimer (uid) {
@@ -118,9 +135,46 @@ module.exports = function utilities () {
     }
   }
 
+  function getTypeData (type) {
+    switch (type) {
+      case 'work':
+        return {
+          type: 'work',
+          active: true,
+          minutes: 0,
+          seconds: 0,
+          duration: 25,
+          lastDuration: 0
+        }
+        break;
+      case 'short_break':
+        return {
+          type: 'short_break',
+          active: true,
+          minutes: 0,
+          seconds: 0,
+          duration: 5,
+          lastDuration: 0
+        }
+      case 'long_break':
+        return {
+          type: 'long_break',
+          active: true,
+          minutes: 0,
+          seconds: 0,
+          duration: 15,
+          lastDuration: 0
+        }
+      default:
+        return type
+    }
+  }
+
   async function changeTimerType (uid, type) {
     try {
-      await Timer.findOneAndUpdate({ uid }, { type }, {upsert: true})
+      const data = getTypeData(type)
+      const { duration, minutes, seconds, active, lastDuration } = data
+      await Timer.findOneAndUpdate({ uid }, { type, duration, minutes, seconds, active, lastDuration }, {upsert: true})
       const timerUpdated = await getTimerByUid(uid)
       return timerUpdated
     } catch (e) {
@@ -135,12 +189,84 @@ module.exports = function utilities () {
         seconds: 0,
         active: false,
         duration: 25,
-        type: "work"
+        type: "work",
+        lastDuration:0
       }, {upsert: true})
       const timerUpdated = await getTimerByUid(uid)
       return timerUpdated
     } catch (e) {
       _handleError(`There was an error reseting timer: ==> ${e}`)
+    }
+  }
+
+  async function updateCounter (uid, minutes, seconds, lastDuration) {
+    try {
+      await Timer.findOneAndUpdate({ uid }, {
+        minutes,
+        seconds,
+        lastDuration
+      }, { upsert: true })
+      const counterUpdated = await getTimerByUid(uid)
+      return counterUpdated
+    } catch (e) {
+      _handleError(`There was an error updating counter: ==> ${e}`)
+    }
+  }
+
+
+  let interval
+
+  function startCountDown (timer) {
+    const { duration } = timer
+    const durationInSeconds = duration * 60
+
+    calculateTime(durationInSeconds, timer)
+  }
+
+  function stopCountDown () {
+    clearInterval(interval)
+  }
+
+  async function calculateTime (duration, counter) {
+    try {
+      const lastDuration = counter.lastDuration
+      let timer = lastDuration > 0 ? lastDuration : duration
+      let minutes
+      let seconds
+      interval = setInterval( async () => {
+        minutes = parseInt(timer / 60, 10)
+        seconds = parseInt(timer % 60, 10)
+
+        minutes = minutes < 10 ? "0" + minutes : minutes
+        seconds = seconds < 10 ? "0" + seconds : seconds
+
+        console.log(minutes, seconds)
+        const lastDurationInSeconds = timer
+        const counterUpdated = await updateCounter(counter.uid, minutes, seconds, lastDurationInSeconds)
+        pubsub.publish(TIMER_COUNTER_UPDATED, { timerCounterUpdated: counterUpdated })
+
+        if (--timer < 0) {
+          timer = duration
+        }
+      }, 1000)
+    } catch (e) {
+      _handleError(`There was an error at calculateTime: ==> ${e}`)
+    }
+  }
+
+  async function handleStartCounter (uid) {
+    try {
+      const Counter = await Timer.findOne({ uid })
+      const timerStatus = Counter.active
+
+      if (timerStatus) {
+        startCountDown(Counter)
+      } else {
+        stopCountDown()
+      }
+
+    } catch (e) {
+        _handleError(`There was an error hading start counter: ==> ${e}`)
     }
   }
 
@@ -152,6 +278,8 @@ module.exports = function utilities () {
     pauseTimer,
     changeTimerType,
     resetTimer,
-    getTimerByUid
+    getTimerByUid,
+    getUserByUid,
+    handleStartCounter
   }
 }

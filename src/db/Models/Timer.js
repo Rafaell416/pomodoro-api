@@ -11,6 +11,7 @@ const Timer = new Schema({
   active: {type: Boolean, required: true},
   duration: {type: Number, required: true},
   type: {type: String, required: true},
+  lastDuration: { type: Number, required: true }
 })
 
 
