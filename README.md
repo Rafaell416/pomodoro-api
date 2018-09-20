@@ -52,3 +52,10 @@ Also if you prefer you can run the project as a docker container
 
 3. Open it on http://localhost:3000
 ```
+
+## Stack
+The app is build with
+- Nodejs
+- GraphQL - Apollo Server
+- GraphQl Subscriptions - Apollo Websockets
+- MongoDB - Mongoose
